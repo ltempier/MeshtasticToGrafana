@@ -12,98 +12,59 @@ Pour l'interface graphique, j'utilise **Grafana**. Bien que cette solution ne pu
 
 Concernant l'hébergement, je dispose à mon domicile d'un mini-PC **Dell OptiPlex** sur lequel sont hébergés **Grafana**, la base de données, le broker **Mosquitto**, ainsi que le script chargé de lire les messages MQTT et de les enregistrer dans la base de données.
 
----
+
 ## 📐 Architecture
 
 ```text
 🐶 SenseCAP Card Tracker T1000-E
-              │
-              ▼
-      Réseau LoRa Meshtastic
-              │
-              ▼
-📡 Base Meshtastic (XIAO ESP32S3 + Wio-SX1262)
-              │
-            Wi-Fi
-              │
-              ▼
-      Serveur:
-      ├── Broker MQTT (Mosquitto)
-      ├── Script de collecte MQTT
+            │
+            ▼
+      🛜 Réseau Meshtastic
+            │
+            ▼
+📡 Station de base Meshtastic (XIAO ESP32S3 + Wio-SX1262)
+            │
+      🛜 Wi-Fi
+            │
+            ▼
+🖥️ Serveur
+      ├── Mosquitto (MQTT)
+      ├── Script MQTT -> BDD
       ├── Base de données
       └── Grafana
+            │
+         🛜 HTTP(S)
+            │
+            ▼
+🌍 Client Web
 ```
+
+![Architecture](img/architecture.png)
 
 ---
 ## 🛠️ Matériel utilisé
 
-| Matériel | Lien | Prix |
-|----------|------|------:|
-| SenseCAP Card Tracker T1000-E | https://www.seeedstudio.com/SenseCAP-Card-Tracker-T1000-E-for-Meshtastic-p-5913.html | ~40 € |
-| Kit XIAO ESP32S3 + Wio-SX1262 | https://www.seeedstudio.com/Wio-SX1262-with-XIAO-ESP32S3-p-5982.html | ~10 € |
+| Matériel | Lien | Prix indicatif |
+|----------|------|---------------:|
+| SenseCAP Card Tracker T1000-E | [Seeed Studio](https://www.seeedstudio.com/SenseCAP-Card-Tracker-T1000-E-for-Meshtastic-p-5913.html) | ~40 € |
+| Kit XIAO ESP32S3 + Wio-SX1262 | [Seeed Studio](https://www.seeedstudio.com/Wio-SX1262-with-XIAO-ESP32S3-p-5982.html) | ~10 € |
+| Grove Base for XIAO | [Seeed Studio](https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html) | ~4 € |
+| Batterie | LiPo 3,7 V ou Li-ion 18650 |  |
+
+![Hardware](img/hardware.png)
 
 ---
 
-## 📡 Mise en place de la station de base
+## 📡 Configuration de la station
 
-1. **Flash du firmware Meshtastic** sur la carte XIAO ESP32S3 via le flasher web officiel :
-   
-   👉 https://flasher.meshtastic.org/
-   - Sélectionner le périphérique (USB)
-   - Choisir le micrologiciel à flasher
-   - Lancer le flash
-
-2. **Configuration de la station** :
-
-   👉 https://client.meshtastic.org/
-
-   **Config → Wi-Fi**
-
-   * `Enabled` : activé
-   * `SSID` : nom de votre réseau Wi-Fi
-   * `PSK` : mot de passe de votre réseau Wi-Fi
-
-   **Radio Config → LoRa**
-
-   * `Region` : `EU_868` (à adapter selon votre pays)
-   * `Ignore MQTT` : désactivé
-   * `OK to MQTT` : activé (autorise le transfert des paquets reçus vers le broker MQTT)
-
-   **Module Config → MQTT**
-
-   * `Enabled` : activé
-   * `MQTT Server Address` : adresse IP ou nom d'hôte du broker Mosquitto
-   * `MQTT Username` / `MQTT Password` : identifiants définis dans le fichier `.env`
-   * `Encryption Enabled` : à activer selon vos besoins (sans chiffrement, les messages MQTT, y compris les positions GPS, transitent en clair)
-   * `JSON Enabled` : activé (obligatoire, le script Node.js consomme les messages au format JSON)
-
+![Station Configuration](img/station_config.png)
 
 ---
 
-## 🐶 Mise en place du tracker 
+## 🐶 Configuration du tracker
 
-1. **Flash du firmware Meshtastic** sur la carte XIAO ESP32S3 via le flasher web officiel :
-   
-   👉 https://flasher.meshtastic.org/
-   - Sélectionner le périphérique (USB)
-   - Choisir le micrologiciel à flasher
-   - Lancer le flash
+![Tracker Configuration](img/tracker_config.png)
 
-
-2. **Configuration du tracker** :
-   👉 https://client.meshtastic.org/
-
-   **Radio Config → LoRa**
-   - Region : `EU_868` (à adapter selon le pays)
-   - `Ignore MQTT` : désactivé
-   - `OK to MQTT` : activé (autorise le forward des paquets vers MQTT)
-
-   **Module Config → MQTT**
-   - `Enabled` : activé
-   - `MQTT Server Address` : IP du serveur Mosquitto
-   - `MQTT Username` / `MQTT Password` : identifiants définis dans `.env`
-   - `Encryption Enabled` : selon besoin (attention : sans chiffrement, les messages transitent en clair, y compris les positions)
-   - `JSON Enabled` : activé (obligatoire, le script Node consomme du JSON)
 
 ---
 
@@ -128,8 +89,6 @@ POSTGRES_PASSWORD="..."
 
 GF_SECURITY_ADMIN_PASSWORD="..."
 ```
-
-⚠️ Ne jamais committer le fichier `.env` réel (uniquement un `.env.example` avec des valeurs factices).
 
 ---
 
@@ -162,34 +121,6 @@ msh/<region>/<canal>/json/<...>/<node>
 
 ## 📊 Visualisation Grafana
 
-Grafana est connecté à PostgreSQL et permet de construire des dashboards :
-
-- **Carte de trajectoire** : tracé du parcours GPS à partir des positions successives.
-- **Heatmap** : densité de présence sur une zone géographique.
-- **Table des messages** : liste brute (heure de réception, canal, from/to, type, payload).
-- **Graphique temporel** : fréquence des positions reçues dans le temps.
-
-Accès : [http://localhost:3000](http://localhost:3000) (identifiants définis dans `.env`).
+![Graphane example](img/graphana_1.png)
 
 ---
-
-## 📁 Structure du dépôt
-
-```
-.
-├── docker-compose.yml
-├── mosquitto.conf
-├── .env.example
-└── node_scripts/
-    ├── package.json
-    └── meshtastic.js
-```
-
----
-
-## ✅ TODO / Améliorations possibles
-
-- [ ] Déduplication plus robuste des messages (hash du payload)
-- [ ] Alerting Grafana (ex. perte de signal / batterie faible)
-- [ ] Chiffrement des communications MQTT (TLS)
-- [ ] Provisioning automatique des dashboards Grafana (as code)

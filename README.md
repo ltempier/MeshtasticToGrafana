@@ -8,7 +8,7 @@
 [![Docker Compose](https://img.shields.io/badge/deploy-docker--compose-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![Meshtastic](https://img.shields.io/badge/Meshtastic-compatible-67EA94)](https://meshtastic.org)
 
-[Version française](README.md)
+[Version française](README.fr.md)
 
 </div>
 

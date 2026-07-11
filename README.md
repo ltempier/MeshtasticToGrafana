@@ -2,33 +2,33 @@
 
 # 🐶 Meshtastic to Grafana
 
-**Suivi GPS temps réel et historique de position, sans abonnement, basé sur Meshtastic**
+**Real-time GPS tracking and position history, subscription-free, powered by Meshtastic**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker Compose](https://img.shields.io/badge/deploy-docker--compose-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![Meshtastic](https://img.shields.io/badge/Meshtastic-compatible-67EA94)](https://meshtastic.org)
 
-[English version](README.en.md)
+[Version française](README.md)
 
 </div>
 
 ---
 
-## 📖 À propos
+## 📖 About
 
-J'ai créé ce projet pour localiser mon chien en temps réel sur une carte, et pour repérer les points de sortie de mon terrain grâce à un historique des positions.
+I built this project to track my dog in real time on a map, and to spot where he escapes from my property using a history of positions.
 
-Pour cela, j'ai choisi **Meshtastic**, une solution peu onéreuse et surtout ne nécessitant aucun abonnement.
+For this, I chose **Meshtastic**, a low-cost solution that requires no subscription.
 
-Le système repose sur :
-- un tracker **SenseCAP Card Tracker T1000-E** ;
-- une station de base composée d'un **XIAO ESP32S3** associé à un module **LoRa Wio-SX1262**, connectée à mon réseau Wi-Fi.
+The system is built around:
+- a **SenseCAP Card Tracker T1000-E** GPS tracker;
+- a base station made of a **XIAO ESP32S3** paired with a **Wio-SX1262 LoRa module**, connected to my Wi-Fi network.
 
-Le tracker envoie ses coordonnées GPS sur un canal privé via le réseau Meshtastic. La station de base reçoit ces informations puis les publie via **MQTT** sur un broker **Mosquitto**. Un script Node.js récupère ensuite les messages MQTT et les enregistre dans une base **PostgreSQL**.
+The tracker sends its GPS coordinates on a private channel over the Meshtastic network. The base station receives this data and publishes it via **MQTT** to a **Mosquitto** broker. A Node.js script then reads the MQTT messages and stores them in a **PostgreSQL** database.
 
-Pour l'interface graphique, j'utilise **Grafana**. Cette solution ne rivalise pas avec une application développée sur mesure, mais elle répond parfaitement au besoin tout en évitant de développer une interface dédiée.
+For the graphical interface, I use **Grafana**. It can't compete with a fully custom-built app, but it perfectly covers my needs without having to develop a dedicated interface.
 
-Le tout est hébergé à domicile sur un mini-PC **Dell OptiPlex**, qui fait tourner Grafana, la base de données, le broker Mosquitto et le script MQTT → BDD.
+Everything is self-hosted at home on a **Dell OptiPlex** mini-PC, running Grafana, the database, the Mosquitto broker, and the MQTT → DB script.
 
 ---
 
@@ -38,70 +38,70 @@ Le tout est hébergé à domicile sur un mini-PC **Dell OptiPlex**, qui fait tou
 🐶 SenseCAP Card Tracker T1000-E
             │
             ▼
-      🛜 Réseau Meshtastic
+      🛜 Meshtastic network
             │
             ▼
-📡 Station de base Meshtastic (XIAO ESP32S3 + Wio-SX1262)
+📡 Meshtastic base station (XIAO ESP32S3 + Wio-SX1262)
             │
       🛜 Wi-Fi
             │
             ▼
-🖥️ Serveur
+🖥️ Server
       ├── Mosquitto (MQTT)
-      ├── Script MQTT → BDD
-      ├── Base de données (PostgreSQL)
+      ├── MQTT → DB script
+      ├── Database (PostgreSQL)
       └── Grafana
             │
          🛜 HTTP(S)
             │
             ▼
-🌍 Client Web
+🌍 Web client
 ```
 
 ![Architecture](img/architecture.png)
 
 ---
 
-## 🛠️ Matériel utilisé
+## 🛠️ Hardware
 
-| Matériel                      | Lien                                                                                                  | Prix indicatif |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------ | --------------- |
-| SenseCAP Card Tracker T1000-E  | [Seeed Studio](https://www.seeedstudio.com/SenseCAP-Card-Tracker-T1000-E-for-Meshtastic-p-5913.html)  | ~40 €           |
-| Kit XIAO ESP32S3 + Wio-SX1262  | [Seeed Studio](https://www.seeedstudio.com/Wio-SX1262-with-XIAO-ESP32S3-p-5982.html)                  | ~10 €           |
-| Grove Base for XIAO            | [Seeed Studio](https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html)               | ~4 €            |
-| Batterie                       | LiPo 3,7 V ou Li-ion 18650                                                                              | —               |
+| Hardware                       | Link                                                                                                   | Approx. price |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------- |
+| SenseCAP Card Tracker T1000-E    | [Seeed Studio](https://www.seeedstudio.com/SenseCAP-Card-Tracker-T1000-E-for-Meshtastic-p-5913.html)     | ~€40           |
+| XIAO ESP32S3 + Wio-SX1262 kit    | [Seeed Studio](https://www.seeedstudio.com/Wio-SX1262-with-XIAO-ESP32S3-p-5982.html)                      | ~€10           |
+| Grove Base for XIAO              | [Seeed Studio](https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html)                   | ~€4            |
+| Battery                          | 3.7V LiPo or 18650 Li-ion                                                                                    | —              |
 
 ![Hardware](img/hardware.png)
 
 ---
 
-## 🚀 Démarrage rapide
+## 🚀 Quick start
 
-Prérequis : [Docker](https://docs.docker.com/get-docker/) et [Docker Compose](https://docs.docker.com/compose/install/).
+Requirements: [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
 ```bash
 git clone https://github.com/ltempier/MeshtasticToGrafana.git
 cd MeshtasticToGrafana
-cp ".env copy" .env    # renseigner les variables (voir ci-dessous)
+cp ".env copy" .env    # fill in the variables (see below)
 docker compose up -d
 ```
 
-Une fois les conteneurs démarrés :
-- **Grafana** est accessible sur `http://<adresse-du-serveur>:3000`
-- **Mosquitto (MQTT)** écoute sur le port `1883`
-- **PostgreSQL** écoute sur le port `5432`
+Once the containers are up:
+- **Grafana** is available at `http://<server-address>:3000`
+- **Mosquitto (MQTT)** listens on port `1883`
+- **PostgreSQL** listens on port `5432`
 
-> ℹ️ Adapte les ports exposés dans `docker-compose.yml` selon ton installation.
+> ℹ️ Adjust the exposed ports in `docker-compose.yml` to match your setup.
 
-### Variables d'environnement (`.env`)
+### Environment variables (`.env`)
 
-| Variable                     | Description                              |
-| ----------------------------- | ----------------------------------------- |
-| `MQTT_USER`                  | Identifiant du broker MQTT                |
-| `MQTT_PASS`                  | Mot de passe du broker MQTT               |
-| `POSTGRES_USER`              | Utilisateur PostgreSQL                    |
-| `POSTGRES_PASSWORD`          | Mot de passe PostgreSQL                   |
-| `GF_SECURITY_ADMIN_PASSWORD` | Mot de passe administrateur Grafana       |
+| Variable                     | Description                        |
+| ----------------------------- | ------------------------------------ |
+| `MQTT_USER`                  | MQTT broker username                |
+| `MQTT_PASS`                  | MQTT broker password                |
+| `POSTGRES_USER`              | PostgreSQL user                     |
+| `POSTGRES_PASSWORD`          | PostgreSQL password                 |
+| `GF_SECURITY_ADMIN_PASSWORD` | Grafana admin password              |
 
 ```env
 MQTT_USER="..."
@@ -115,61 +115,61 @@ GF_SECURITY_ADMIN_PASSWORD="..."
 
 ---
 
-## 📡 Configuration de la station de base
+## 📡 Base station configuration
 
-Configuration Meshtastic de la station (XIAO ESP32S3 + Wio-SX1262) : rôle, région radio, canal privé, connexion Wi-Fi et redirection MQTT vers le broker local.
+Meshtastic configuration of the base station (XIAO ESP32S3 + Wio-SX1262): role, radio region, private channel, Wi-Fi connection, and MQTT forwarding to the local broker.
 
 ![Station Configuration](img/station_config.png)
 
 ---
 
-## 🐶 Configuration du tracker
+## 🐶 Tracker configuration
 
-Configuration du **SenseCAP Card Tracker T1000-E** : canal privé partagé avec la station de base, intervalle d'envoi de la position et mode d'économie d'énergie.
+Configuration of the **SenseCAP Card Tracker T1000-E**: private channel shared with the base station, position update interval, and power-saving mode.
 
 ![Tracker Configuration](img/tracker_config.png)
 
 ---
 
-## 🗄️ Base de données
+## 🗄️ Database
 
-Le script [`meshtastic.js`](node_scripts) crée automatiquement, au démarrage, la table `messages` si elle n'existe pas :
+The [`meshtastic.js`](node_scripts) script automatically creates the `messages` table on startup if it doesn't already exist:
 
-| Colonne                                  | Description                                                                    |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `id`                                     | Identifiant auto-incrémenté                                                     |
-| `receive_time`                           | Horodatage de réception côté serveur                                            |
-| `topic` / `topic_channel` / `topic_node` | Topic MQTT d'origine et ses composantes                                         |
-| `msg_id`                                 | ID du paquet Meshtastic                                                         |
-| `from_node` / `to_node`                  | Identifiants numériques des nœuds source/destination                            |
-| `from_txt` / `to_txt`                    | Version hexadécimale courte (4 derniers caractères), générée automatiquement    |
-| `type`                                   | Type de paquet (`position`, `nodeinfo`, `telemetry`, etc.)                      |
-| `sender`                                 | Identifiant du nœud émetteur (`!xxxxxxxx`)                                      |
-| `channel`                                | Canal Meshtastic                                                                 |
-| `hop_start` / `hops_away`                | Informations de routage LoRa                                                     |
-| `node_ts`                                | Horodatage fourni par le nœud lui-même                                          |
-| `payload`                                | Corps JSON complet du message (JSONB)                                           |
+| Column                                    | Description                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `id`                                       | Auto-incrementing identifier                                                  |
+| `receive_time`                             | Server-side reception timestamp                                               |
+| `topic` / `topic_channel` / `topic_node`   | Original MQTT topic and its parsed components                                 |
+| `msg_id`                                   | Meshtastic packet ID                                                          |
+| `from_node` / `to_node`                    | Numeric source/destination node identifiers                                   |
+| `from_txt` / `to_txt`                      | Short hex form (last 4 characters), generated automatically                   |
+| `type`                                     | Packet type (`position`, `nodeinfo`, `telemetry`, etc.)                       |
+| `sender`                                   | Sending node identifier (`!xxxxxxxx`)                                         |
+| `channel`                                  | Meshtastic channel                                                            |
+| `hop_start` / `hops_away`                  | LoRa routing information                                                      |
+| `node_ts`                                  | Timestamp reported by the node itself                                         |
+| `payload`                                  | Full JSON body of the message (JSONB)                                         |
 
-Le topic MQTT suivi respecte le format Meshtastic standard :
+The tracked MQTT topic follows the standard Meshtastic format:
 
 ```
-msh/<region>/<canal>/json/<...>/<node>
-# ex : msh/EU_868/2/json/ROM/!9e9d189c
+msh/<region>/<channel>/json/<...>/<node>
+# e.g.: msh/EU_868/2/json/ROM/!9e9d189c
 ```
 
 ---
 
-## 📊 Visualisation Grafana
+## 📊 Grafana visualization
 
-Une fois les données en base, crée un dashboard Grafana pointant sur la datasource PostgreSQL pour afficher la position en temps réel sur une carte, ainsi que l'historique des trajets.
+Once data is stored in the database, build a Grafana dashboard pointing at the PostgreSQL datasource to display the real-time position on a map, along with the position history.
 
 ![Graphana example](img/graphana_1.png)
 
-### Requêtes SQL utilisées
+### SQL queries used
 
-**Activité (nombre de positions dans le temps)**
+**Activity (number of positions over time)**
 
-Cette requête compte le nombre de positions reçues, regroupées par intervalle de temps adaptatif (par minute, par tranche de 30 minutes ou par heure selon la plage sélectionnée dans Grafana). Elle sert à afficher un graphique d'activité du tracker (fréquence des remontées GPS) sur un panel de type "time series" ou "bar chart".
+This query counts received positions, grouped by an adaptive time bucket (per minute, per 30-minute slot, or per hour depending on the range selected in Grafana). It powers a chart showing tracker activity (frequency of GPS reports) on a "time series" or "bar chart" panel.
 
 ```sql
 SELECT
@@ -193,9 +193,9 @@ GROUP BY 1
 ORDER BY 1;
 ```
 
-**Positions GPS**
+**GPS positions**
 
-Cette requête extrait latitude, longitude et altitude des messages de type `position` sur la plage temporelle sélectionnée. Elle alimente un panel de type "Geomap" (ou "Trail") pour afficher la position en temps réel et l'historique des trajets sur la carte.
+This query extracts latitude, longitude and altitude from `position` messages within the selected time range. It feeds a "Geomap" (or "Trail") panel to display the real-time position and the trip history on the map.
 
 ```sql
 SELECT
@@ -212,10 +212,10 @@ ORDER BY receive_time asc
 LIMIT 1000000;
 ```
 
-> ℹ️ `from_txt = '49d3'` filtre sur l'identifiant court du nœud émetteur (ici le tracker). Remplace cette valeur par les 4 derniers caractères de l'identifiant de ton propre appareil.
+> ℹ️ `from_txt = '49d3'` filters on the short identifier of the sending node (here, the tracker). Replace this value with the last 4 characters of your own device's identifier.
 
 ---
 
-## 📄 Licence
+## 📄 License
 
-Ce projet est distribué sous licence [MIT](LICENSE).
+This project is distributed under the [MIT](LICENSE) license.
